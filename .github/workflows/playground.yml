@@ -1,0 +1,40 @@
+# A workflow for SourceQuote's live Actions tests: started by hand with inputs, one job that passes and one that can
+# fail on purpose (so the run page has a failing step and a log error to jump to).
+name: Playground
+
+on:
+  workflow_dispatch:
+    inputs:
+      greeting:
+        description: What to say
+        required: true
+        default: hello
+      channel:
+        description: Where it pretends to ship
+        type: choice
+        options: [beta, stable]
+        default: beta
+      fail:
+        description: Make the second job fail
+        type: boolean
+        default: false
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say it
+        run: echo "${{ inputs.greeting }} from the ${{ inputs.channel }} channel"
+      - name: Take a moment
+        run: sleep 20
+  check:
+    runs-on: ubuntu-latest
+    needs: greet
+    steps:
+      - name: Check
+        run: |
+          if [ "${{ inputs.fail }}" = "true" ]; then
+            echo "::error::Failed on purpose"
+            exit 1
+          fi
+          echo "All good"
